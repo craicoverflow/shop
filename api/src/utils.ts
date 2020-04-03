@@ -1,9 +1,16 @@
 import * as jwt from 'jsonwebtoken';
-import { Prisma } from './generated/prisma';
+import { loadConfig } from 'graphql-config'
+import { CRUDService } from '@graphback/runtime-knex';
+import Knex = require('knex');
 
 export interface Context {
-  db: Prisma;
+  models: CRUDContext;
   request: any;
+  db: Knex;
+}
+
+interface CRUDContext {
+  [modelName: string]: CRUDService
 }
 
 export function getUserId(ctx: Context) {
@@ -15,6 +22,17 @@ export function getUserId(ctx: Context) {
   }
 
   throw new AuthError();
+}
+
+export async function getProjectConfig() {
+  const config = await loadConfig({
+    rootDir: process.cwd(),
+    extensions: [
+      () => ({ name: 'graphback' })
+    ]
+  });
+
+  return config.getDefault()
 }
 
 export class AuthError extends Error {
